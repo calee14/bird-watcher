@@ -1,17 +1,21 @@
 package main
 
 import (
+	"bufio"
+	"crypto/tls"
 	"fmt"
 	"log"
-	"net/smtp"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"gopkg.in/gomail.v2"
+
 	"github.com/gocolly/colly"
 	"github.com/joho/godotenv"
+	"github.com/robfig/cron/v3"
 )
 
 type MissionInfo struct {
@@ -35,30 +39,36 @@ func send(missionData []MissionInfo) {
 		body += mission.time + "\n\n"
 	}
 
-	msg := "From: " + from + "\n" +
-		"To: " + to + "\n" +
-		"Subject: sightings for " + month.String() + " " + strconv.Itoa(day) + "\n\n" +
-		body
-	err := smtp.SendMail("smtp.gmail.com:587",
-		smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
-		from, []string{to}, []byte(msg))
+	// make mail message
+	msg := gomail.NewMessage()
+	msg.SetHeader("From", from)
+	msg.SetHeader("To", to)
+	msg.SetHeader("Subject", "sightings for "+month.String()+" "+strconv.Itoa(day))
+	msg.SetBody("text/plain", body)
+
+	// dialer
+	dialer := gomail.NewDialer("smtp.gmail.com", 587, from, pass)
+	dialer.TLSConfig = &tls.Config{ServerName: "smtp.gmail.com"}
+
+	err := dialer.DialAndSend(msg)
 	if err != nil {
 		log.Printf("smtp error: %s", err)
 		return
 	}
-	log.Printf("Successfully sent message on: %s %s", month.String(), strconv.Itoa(day))
+
+	log.Printf("successfully sent message on: %s %s", month.String(), strconv.Itoa(day))
 }
 
 func collectMissionData() []MissionInfo {
 	var missions []MissionInfo
 	var mu sync.Mutex
 
-	c := colly.NewCollector(
+	collector := colly.NewCollector(
 		colly.AllowedDomains("spaceflightnow.com"),
 	)
 
 	// find and parse data
-	c.OnHTML("div.datename + div.missiondata", func(e *colly.HTMLElement) {
+	collector.OnHTML("div.datename + div.missiondata", func(e *colly.HTMLElement) {
 		missionDate := e.DOM.Prev().Text()
 		missionTime := e.Text
 		parsedMissionDate := strings.ReplaceAll(strings.TrimSpace(missionDate), "\n", " ")
@@ -71,18 +81,47 @@ func collectMissionData() []MissionInfo {
 		})
 		mu.Unlock()
 
-		fmt.Println(parsedMissionDate)
-		fmt.Println((parsedMissionTime))
+		// fmt.Println(parsedMissionDate)
+		// fmt.Println(parsedMissionTime)
 	})
 
-	err := c.Visit("https://spaceflightnow.com/launch-schedule/")
+	err := collector.Visit("https://spaceflightnow.com/launch-schedule/")
 	if err != nil {
 		log.Printf("error visiting page: %v", err)
 	}
 	return missions
 }
 
-func main() {
+func handleCli() {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+
+		if strings.Compare("exit", text) == 0 {
+			log.Println("bird-watcher going offline.")
+			os.Exit(0)
+		}
+	}
+}
+
+func watcher() {
+	// collect data and send mail message
 	missionData := collectMissionData()
 	send(missionData)
+}
+
+func main() {
+	go handleCli()
+
+	loc, _ := time.LoadLocation("America/Los_Angeles")
+	job := cron.New(cron.WithLocation(loc))
+	_, err := job.AddFunc("0 8 * * *", watcher)
+	if err != nil {
+		log.Fatal(err)
+	}
+	job.Start()
+	defer job.Stop()
+
+	select {}
 }
