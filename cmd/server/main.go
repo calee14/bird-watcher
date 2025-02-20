@@ -29,10 +29,6 @@ func main() {
 	// handle cli inputs
 	go HandleCli()
 
-	log.Printf("sending mail here")
-	watcher.Watcher()
-
-	log.Printf("starting cron job")
 	// start watcher job
 	watcher.StartWatcher()
 
