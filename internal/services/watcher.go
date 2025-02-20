@@ -114,7 +114,7 @@ func Watcher() {
 func StartWatcher() {
 	loc, _ := time.LoadLocation("America/Los_Angeles")
 	job := cron.New(cron.WithLocation(loc))
-	_, err := job.AddFunc("5 * * * *", Watcher)
+	_, err := job.AddFunc("* * * * *", Watcher)
 	if err != nil {
 		log.Fatal(err)
 		log.Printf("starting cron job. errors: %s", err.Error())
