@@ -25,7 +25,6 @@ func HandleCli() {
 }
 
 func main() {
-	log.Println("bird-watcher online and scanning at port 8080.")
 
 	// handle cli inputs
 	go HandleCli()
@@ -42,6 +41,7 @@ func main() {
 		port = "8080"
 	}
 
+	log.Printf("bird-watcher online and scanning at port %s.", port)
 	// start server
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	if err != nil {
