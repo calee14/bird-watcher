@@ -15,13 +15,20 @@ import (
 
 	"github.com/gocolly/colly"
 	"github.com/joho/godotenv"
-	"github.com/robfig/cron/v3"
 )
 
 type MissionInfo struct {
 	datename string
 	time     string
 }
+
+type ScheduledDate struct {
+	Day   int
+	Month int
+}
+
+// init prev scheduled date to trigger send
+var PrevScheduledDate ScheduledDate = ScheduledDate{time.Now().Day() - 1, int(time.Now().Month())}
 
 func Send(missionData []MissionInfo) {
 	godotenv.Load()
@@ -112,13 +119,28 @@ func Watcher() {
 }
 
 func StartWatcher() {
-	loc, _ := time.LoadLocation("America/Los_Angeles")
-	job := cron.New(cron.WithLocation(loc))
-	_, err := job.AddFunc("* * * * *", Watcher)
-	if err != nil {
-		log.Fatal(err)
-		log.Printf("starting cron job. errors: %s", err.Error())
+	for {
+		loc, _ := time.LoadLocation("America/Los_Angeles")
+		now := time.Now().In(loc)
+		_, mm, dd := now.Date()
+		hour := now.Hour()
+		currDate := ScheduledDate{dd, int(mm)}
+		if hour == 12 && PrevScheduledDate != currDate {
+			Watcher()
+			PrevScheduledDate = ScheduledDate{dd, int(mm)}
+		}
+		time.Sleep(5 * time.Minute)
 	}
-	job.Start()
-	defer job.Stop()
 }
+
+// func StartWatcher() {
+// 	loc, _ := time.LoadLocation("America/Los_Angeles")
+// 	job := cron.New(cron.WithLocation(loc))
+// 	_, err := job.AddFunc("* * * * *", Watcher)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 		log.Printf("starting cron job. errors: %s", err.Error())
+// 	}
+// 	job.Start()
+// 	defer job.Stop()
+// }

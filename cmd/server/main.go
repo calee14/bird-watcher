@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func HandleCli() {
+	time.Now().Date()
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		text, _ := reader.ReadString('\n')
@@ -30,7 +32,7 @@ func main() {
 	go HandleCli()
 
 	// start watcher job
-	watcher.StartWatcher()
+	go watcher.StartWatcher()
 
 	// manage handlers
 	http.HandleFunc("/", handlers.Index)
