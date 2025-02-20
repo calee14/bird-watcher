@@ -117,6 +117,7 @@ func StartWatcher() {
 	_, err := job.AddFunc("0 8 * * *", Watcher)
 	if err != nil {
 		log.Fatal(err)
+		log.Printf("starting cron job. errors: %s", err.Error())
 	}
 	job.Start()
 	defer job.Stop()
