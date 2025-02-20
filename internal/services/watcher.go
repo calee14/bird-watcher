@@ -1,4 +1,4 @@
-package main
+package watcher
 
 import (
 	"bufio"
@@ -23,7 +23,7 @@ type MissionInfo struct {
 	time     string
 }
 
-func send(missionData []MissionInfo) {
+func Send(missionData []MissionInfo) {
 	godotenv.Load()
 
 	pass := os.Getenv("EMAIL_APP_PASSWORD")
@@ -59,7 +59,7 @@ func send(missionData []MissionInfo) {
 	log.Printf("successfully sent message on: %s %s", month.String(), strconv.Itoa(day))
 }
 
-func collectMissionData() []MissionInfo {
+func CollectMissionData() []MissionInfo {
 	var missions []MissionInfo
 	var mu sync.Mutex
 
@@ -92,7 +92,7 @@ func collectMissionData() []MissionInfo {
 	return missions
 }
 
-func handleCli() {
+func HandleCli() {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		text, _ := reader.ReadString('\n')
@@ -105,23 +105,19 @@ func handleCli() {
 	}
 }
 
-func watcher() {
+func Watcher() {
 	// collect data and send mail message
-	missionData := collectMissionData()
-	send(missionData)
+	missionData := CollectMissionData()
+	Send(missionData)
 }
 
-func main() {
-	go handleCli()
-
+func StartWatcher() {
 	loc, _ := time.LoadLocation("America/Los_Angeles")
 	job := cron.New(cron.WithLocation(loc))
-	_, err := job.AddFunc("0 8 * * *", watcher)
+	_, err := job.AddFunc("0 8 * * *", Watcher)
 	if err != nil {
 		log.Fatal(err)
 	}
 	job.Start()
 	defer job.Stop()
-
-	select {}
 }
