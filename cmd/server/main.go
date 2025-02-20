@@ -2,8 +2,9 @@ package main
 
 import (
 	"bird-watcher/internal/handlers"
-	"bird-watcher/internal/services"
+	watcher "bird-watcher/internal/services"
 	"bufio"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -35,8 +36,14 @@ func main() {
 	// manage handlers
 	http.HandleFunc("/", handlers.Index)
 
+	// get port
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	// start server
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	if err != nil {
 		log.Fatal("failed to boot up server.")
 	}
