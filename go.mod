@@ -1,6 +1,6 @@
 module bird-watcher
 
-go 1.24
+go 1.23
 
 require (
 	github.com/gocolly/colly v1.2.0
