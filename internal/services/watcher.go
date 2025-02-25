@@ -1,6 +1,7 @@
 package watcher
 
 import (
+	db "bird-watcher/internal/database"
 	"bufio"
 	"crypto/tls"
 	"fmt"
@@ -30,12 +31,12 @@ type ScheduledDate struct {
 // init prev scheduled date to trigger send
 var PrevScheduledDate ScheduledDate = ScheduledDate{time.Now().Day() - 1, int(time.Now().Month())}
 
-func Send(missionData []MissionInfo) {
+func Send(missionData []MissionInfo, target string) {
 	godotenv.Load()
 
 	pass := os.Getenv("EMAIL_APP_PASSWORD")
 	from := os.Getenv("EMAIL_SOURCE")
-	to := os.Getenv("EMAIL_TARGET")
+	to := target
 
 	_, month, day := time.Now().Date()
 
@@ -115,7 +116,24 @@ func HandleCli() {
 func Watcher() {
 	// collect data and send mail message
 	missionData := CollectMissionData()
-	Send(missionData)
+
+	subscribers, err := db.GetAllSubscribers()
+	if err != nil {
+		log.Printf("error: %s", err.Error())
+	}
+
+	// send out emails in goroutine
+	var wg sync.WaitGroup
+	for i := 0; i < len(subscribers); i++ {
+		wg.Add(1)
+
+		go func(data interface{}, email string) {
+			defer wg.Done()
+
+			Send(missionData, email)
+		}(missionData, subscribers[i].Email)
+	}
+	wg.Wait()
 }
 
 func StartWatcher() {

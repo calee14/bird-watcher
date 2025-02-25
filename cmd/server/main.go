@@ -39,6 +39,8 @@ func main() {
 
 	// manage handlers
 	http.HandleFunc("/", handlers.Index)
+	http.HandleFunc("/subscribe", handlers.AddSubscriber)
+	http.HandleFunc("/unsubscribe", handlers.RemoveSusbcriber)
 
 	// get port
 	port := os.Getenv("PORT")
