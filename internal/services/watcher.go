@@ -40,7 +40,7 @@ func Send(missionData []MissionInfo, target string) {
 
 	_, month, day := time.Now().Date()
 
-	subject := fmt.Sprintf("%s %s | upcoming: %s", month.String(), strconv.Itoa(day), missionData[0].datename)
+	subject := fmt.Sprintf("%s %s | Upcoming: %s", month.String(), strconv.Itoa(day), missionData[0].datename)
 	body := fmt.Sprintf("Today's date: %s %s\n\n\n", month.String(), strconv.Itoa(day))
 	for i := 0; i < len(missionData); i++ {
 		mission := missionData[i]
@@ -144,7 +144,7 @@ func StartWatcher() {
 		_, mm, dd := now.Date()
 		hour := now.Hour()
 		currDate := ScheduledDate{dd, int(mm)}
-		if hour == 8 && PrevScheduledDate != currDate {
+		if hour == 0 && PrevScheduledDate != currDate {
 			Watcher()
 			PrevScheduledDate = ScheduledDate{dd, int(mm)}
 		}
