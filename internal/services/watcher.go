@@ -40,6 +40,7 @@ func Send(missionData []MissionInfo, target string) {
 
 	_, month, day := time.Now().Date()
 
+	subject := fmt.Sprintf("%s %s | upcoming: %s", month.String(), strconv.Itoa(day), missionData[0].datename)
 	body := fmt.Sprintf("Today's date: %s %s\n\n\n", month.String(), strconv.Itoa(day))
 	for i := 0; i < len(missionData); i++ {
 		mission := missionData[i]
@@ -51,7 +52,7 @@ func Send(missionData []MissionInfo, target string) {
 	msg := gomail.NewMessage()
 	msg.SetHeader("From", from)
 	msg.SetHeader("To", to)
-	msg.SetHeader("Subject", "sightings for "+month.String()+" "+strconv.Itoa(day))
+	msg.SetHeader("Subject", subject)
 	msg.SetBody("text/plain", body)
 
 	// dialer
