@@ -1,6 +1,7 @@
 package main
 
 import (
+	db "bird-watcher/internal/database"
 	"bird-watcher/internal/handlers"
 	watcher "bird-watcher/internal/services"
 	"bufio"
@@ -9,11 +10,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 )
 
 func HandleCli() {
-	time.Now().Date()
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		text, _ := reader.ReadString('\n')
@@ -27,6 +26,10 @@ func HandleCli() {
 }
 
 func main() {
+
+	// init db
+	db.InitDB()
+	defer db.DB.Close()
 
 	// handle cli inputs
 	go HandleCli()
