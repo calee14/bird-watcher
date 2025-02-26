@@ -3,19 +3,22 @@ package handlers
 import (
 	db "bird-watcher/internal/database"
 	"encoding/json"
+	"html/template"
 	"net/http"
 )
 
-type Response struct {
+type ResponseMessage struct {
 	Message string `json:"message"`
 }
 
+var templates = template.Must(template.ParseGlob("./templates/*.html"))
+
 func Index(w http.ResponseWriter, r *http.Request) {
-	body := Response{Message: "bird-watcher online!"}
-	jsonString, _ := json.Marshal(body)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonString)
+	err := templates.ExecuteTemplate(w, "index.html", nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func AddSubscriber(w http.ResponseWriter, r *http.Request) {
@@ -60,5 +63,5 @@ func RemoveSusbcriber(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(Response{Message: "successfully unsubscribed"})
+	json.NewEncoder(w).Encode(ResponseMessage{Message: "successfully unsubscribed"})
 }

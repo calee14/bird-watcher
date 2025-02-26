@@ -28,6 +28,9 @@ type ScheduledDate struct {
 	Month int
 }
 
+// scheduled time to send updates
+var ScheduledTime int = 8
+
 // init prev scheduled date to trigger send
 var PrevScheduledDate ScheduledDate = ScheduledDate{time.Now().Day() - 1, int(time.Now().Month())}
 
@@ -144,7 +147,7 @@ func StartWatcher() {
 		_, mm, dd := now.Date()
 		hour := now.Hour()
 		currDate := ScheduledDate{dd, int(mm)}
-		if hour == 9 && PrevScheduledDate != currDate {
+		if hour == ScheduledTime && PrevScheduledDate != currDate {
 			Watcher()
 			PrevScheduledDate = ScheduledDate{dd, int(mm)}
 		}
