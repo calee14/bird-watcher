@@ -144,7 +144,7 @@ func StartWatcher() {
 		_, mm, dd := now.Date()
 		hour := now.Hour()
 		currDate := ScheduledDate{dd, int(mm)}
-		if hour == 8 && PrevScheduledDate != currDate {
+		if hour == 9 && PrevScheduledDate != currDate {
 			Watcher()
 			PrevScheduledDate = ScheduledDate{dd, int(mm)}
 		}
